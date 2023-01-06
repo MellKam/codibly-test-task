@@ -1,6 +1,6 @@
 import { Modal, Box, Typography } from "@mui/material";
 import { FC } from "react";
-import { Product } from "../api";
+import { Product } from "../services/api";
 
 export const ProductModal: FC<{
 	product: Product;

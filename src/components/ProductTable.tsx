@@ -9,14 +9,16 @@ import {
 	TablePagination,
 	TableHead,
 } from "@mui/material";
-import { FC, ReactNode, useState } from "react";
-import { Product, useProducts, useProduct } from "../api";
+import { FC, ReactNode, useEffect, useState, memo } from "react";
+import { Product } from "../services/api";
 import { TablePaginationActions } from "./TablePaginationActions";
 import { ProductModal } from "./ProductModal";
+import { useSearchParams } from "../hooks/useSearchParams";
+import { useProducts, useProduct } from "../services/product";
+import { DEFAULT_PAGE, ITEMS_PER_PAGE } from "../constants";
 
-export const ProductTableCell: FC<{ product: Product }> = (props) => {
+export const ProductTableCell: FC<{ product: Product }> = ({ product }) => {
 	const [isModalOpen, setModalState] = useState(false);
-	const { product } = props;
 
 	return (
 		<>
@@ -49,9 +51,7 @@ export const ProductsTableWrapper: FC<{
 		handlerPageChange: (nextPage: number) => void;
 	};
 	children: ReactNode;
-}> = (props) => {
-	const { children, pagination } = props;
-
+}> = ({ children, pagination }) => {
 	return (
 		<TableContainer component={Paper}>
 			<Table sx={{ minWidth: 500 }}>
@@ -85,28 +85,54 @@ export const ProductsTableWrapper: FC<{
 	);
 };
 
-export const ProductsTable: FC<{ itemsPerPage: number }> = (props) => {
-	const { itemsPerPage } = props;
-	const [page, setPage] = useState(0);
+export const ProductsTable = () => {
+	const [page, setPage] = useState(DEFAULT_PAGE);
 
 	const {
 		data: products,
 		status,
 		error,
-		isFetching,
 	} = useProducts({
 		page,
-		per_page: props.itemsPerPage,
+		per_page: ITEMS_PER_PAGE,
 	});
+
+	const { searchParams, setSearchParams } = useSearchParams();
+
+	useEffect(() => {
+		const searchPage = searchParams.get("page");
+		if (searchPage) {
+			const numPage = parseInt(searchPage);
+			if (!isNaN(numPage) && page !== numPage) setPage(numPage);
+		}
+	}, [searchParams]);
+
+	useEffect(() => {
+		setSearchParams((prev) => {
+			if (prev.get("page") === null && page === DEFAULT_PAGE) {
+				return prev;
+			}
+
+			prev.set("page", page.toString());
+			return prev;
+		});
+	}, [page]);
 
 	return (
 		<ProductsTableWrapper
-			pagination={{
-				currentPage: page,
-				handlerPageChange: (nextPage) => setPage(nextPage),
-				itemsPerPage,
-				totalItems: products?.total || 0,
-			}}
+			pagination={
+				status === "success"
+					? {
+							// we need to decrement our page because in mui
+							// page starts with 0, but in our api it starts with 1
+							currentPage: page - 1,
+							// and increment when set it
+							handlerPageChange: (nextPage) => setPage(nextPage + 1),
+							itemsPerPage: ITEMS_PER_PAGE,
+							totalItems: products.total,
+					  }
+					: undefined
+			}
 		>
 			{status === "loading" ? (
 				<TableRow>
@@ -131,26 +157,30 @@ export const ProductsTable: FC<{ itemsPerPage: number }> = (props) => {
 	);
 };
 
-export const FilteredProductTable: FC<{ productId: number }> = (props) => {
-	const { status, data: product, error } = useProduct(props.productId);
+export const FilteredProductTable: FC<{ productId: number }> = memo(
+	({ productId }) => {
+		const { status, data: product, error } = useProduct(productId);
 
-	return (
-		<ProductsTableWrapper>
-			{status === "loading" ? (
-				<TableRow>
-					<TableCell align='center' colSpan={3}>
-						Loading...
-					</TableCell>
-				</TableRow>
-			) : status === "error" ? (
-				<TableRow>
-					<TableCell align='center' colSpan={3}>
-						Error: {(error as Error).message}
-					</TableCell>
-				</TableRow>
-			) : (
-				<ProductTableCell product={product.data} />
-			)}
-		</ProductsTableWrapper>
-	);
-};
+		return (
+			<ProductsTableWrapper>
+				{status === "loading" ? (
+					<TableRow>
+						<TableCell align='center' colSpan={3}>
+							Loading...
+						</TableCell>
+					</TableRow>
+				) : status === "error" ? (
+					<TableRow>
+						<TableCell align='center' colSpan={3}>
+							{error.status === 404
+								? `Cannot find product with id ${productId}`
+								: error.message}
+						</TableCell>
+					</TableRow>
+				) : (
+					<ProductTableCell product={product.data} />
+				)}
+			</ProductsTableWrapper>
+		);
+	}
+);

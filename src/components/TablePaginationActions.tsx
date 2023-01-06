@@ -1,4 +1,5 @@
-import { KeyboardArrowLeft, KeyboardArrowRight } from "@mui/icons-material";
+import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import { Box, IconButton } from "@mui/material";
 
 interface TablePaginationActionsProps {
@@ -11,9 +12,12 @@ interface TablePaginationActionsProps {
 	) => void;
 }
 
-export function TablePaginationActions(props: TablePaginationActionsProps) {
-	const { count, page, rowsPerPage, onPageChange } = props;
-
+export function TablePaginationActions({
+	count,
+	page,
+	rowsPerPage,
+	onPageChange,
+}: TablePaginationActionsProps) {
 	return (
 		<Box sx={{ flexShrink: 0, ml: 2.5 }}>
 			<IconButton
