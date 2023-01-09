@@ -1,24 +1,14 @@
 import { Modal, Box, Typography } from "@mui/material";
 import { FC } from "react";
-import { Product } from "../services/api";
+import { Product } from "../services/apiDataTypes";
 
 export const ProductModal: FC<{
 	product: Product;
 	isOpen: boolean;
 	handleClose: (event: {}, reason: "backdropClick" | "escapeKeyDown") => void;
-}> = (props) => {
-	const { product, handleClose, isOpen } = props;
-
+}> = ({ product, handleClose, isOpen }) => {
 	return (
-		<Modal
-			open={isOpen}
-			onClose={handleClose}
-			sx={{
-				":focus-visible": {
-					outline: "none",
-				},
-			}}
-		>
+		<Modal open={isOpen} onClose={handleClose}>
 			<Box
 				sx={{
 					position: "absolute",

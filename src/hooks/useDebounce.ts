@@ -1,6 +1,6 @@
 import { DependencyList, useMemo } from "react";
 
-function debounce<Args extends unknown[]>(
+export function debounce<Args extends unknown[]>(
   fn: (...args: Args) => void,
   delay: number,
 ) {
@@ -26,6 +26,7 @@ function debounce<Args extends unknown[]>(
 export function useDebounce<Args extends unknown[]>(
   cb: (...args: Args) => void,
   delay: number,
+  deps: DependencyList,
 ) {
-  return debounce(cb, delay);
+  return useMemo(() => debounce(cb, delay), deps);
 }

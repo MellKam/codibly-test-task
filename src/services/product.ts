@@ -1,34 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
-import { HttpError } from "./HttpError";
+import { HttpError } from "../utils/HttpError";
+import { parseObjectToQueryString } from "../utils/parseObjectToQueryString";
 import {
   API_BASE,
   ApiItemResponse,
   ApiPaginationResponse,
+  GetProductQueryParams,
   GetProductsQueryParams,
   Product,
-} from "./api";
+} from "./apiDataTypes";
 
-// const delay = async <T>(handler: () => T, delay: number) => {
-//   return new Promise<T>(async (resolve, _) => {
-//     setTimeout(async () => {
-//       resolve(await handler());
-//     }, delay);
-//   });
-// };
-
-export const getProducts = async (opts?: GetProductsQueryParams) => {
-  const queryParams = opts != undefined
-    ? "?" + (Object.keys(opts) as (keyof typeof opts)[])
-      .map((key) => `${key}=${opts[key]}`)
-      .join("&")
-    : "";
-
-  // const res = await delay(
-  //   () => fetch(`${API_BASE}/products${queryParams}`),
-  //   2000,
-  // );
-
-  const res = await fetch(`${API_BASE}/products${queryParams}`);
+const getProducts = async (queryParams?: GetProductsQueryParams) => {
+  const res = await fetch(
+    `${API_BASE}/products${
+      queryParams === undefined ? "" : parseObjectToQueryString(queryParams)
+    }`,
+  );
 
   if (!res.ok) {
     throw new HttpError(await res.text(), res.status);
@@ -37,8 +24,10 @@ export const getProducts = async (opts?: GetProductsQueryParams) => {
   return (await res.json()) as ApiPaginationResponse<Product>;
 };
 
-export const getProductById = async (id: number) => {
-  const res = await fetch(`${API_BASE}/products?id=${id}`);
+const getProductById = async (queryParams: GetProductQueryParams) => {
+  const res = await fetch(
+    `${API_BASE}/products${parseObjectToQueryString(queryParams)}`,
+  );
 
   if (!res.ok) {
     throw new HttpError(await res.text(), res.status);
@@ -50,7 +39,7 @@ export const getProductById = async (id: number) => {
 export const useProduct = (id: number) => {
   return useQuery<ApiItemResponse<Product>, HttpError>({
     queryKey: ["product", id],
-    queryFn: () => getProductById(id),
+    queryFn: () => getProductById({ id }),
     staleTime: Infinity,
     keepPreviousData: true,
     retry: false,

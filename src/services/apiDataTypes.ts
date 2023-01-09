@@ -23,6 +23,10 @@ export interface GetProductsQueryParams {
   page?: number;
 }
 
+export interface GetProductQueryParams {
+  id: number;
+}
+
 export interface ApiPaginationResponse<Item> {
   page: number;
   per_page: number;

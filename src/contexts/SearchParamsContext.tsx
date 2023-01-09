@@ -13,7 +13,7 @@ const SearchParamsContext = createContext<{
 	setSearchParams: Dispatch<SetStateAction<URLSearchParams>>;
 } | null>(null);
 
-export const useSearchParams = () => {
+export const useSearchParamsContext = () => {
 	const data = useContext(SearchParamsContext);
 
 	if (data === null) {

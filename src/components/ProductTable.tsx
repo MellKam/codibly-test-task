@@ -8,16 +8,20 @@ import {
 	TableFooter,
 	TablePagination,
 	TableHead,
+	Box,
+	CircularProgress,
+	Typography,
 } from "@mui/material";
-import { FC, ReactNode, useEffect, useState, memo } from "react";
-import { Product } from "../services/api";
+import { FC, ReactNode, useEffect, useState, memo, useMemo } from "react";
+import { Product } from "../services/apiDataTypes";
 import { TablePaginationActions } from "./TablePaginationActions";
 import { ProductModal } from "./ProductModal";
-import { useSearchParams } from "../hooks/useSearchParams";
 import { useProducts, useProduct } from "../services/product";
 import { DEFAULT_PAGE, ITEMS_PER_PAGE } from "../constants";
+import { useSearchParamsContext } from "../contexts/SearchParamsContext";
+import { useProductSearchFormContext } from "../contexts/ProductSearchFormContext";
 
-export const ProductTableCell: FC<{ product: Product }> = ({ product }) => {
+const ProductTableCell: FC<{ product: Product }> = ({ product }) => {
 	const [isModalOpen, setModalState] = useState(false);
 
 	return (
@@ -43,7 +47,7 @@ export const ProductTableCell: FC<{ product: Product }> = ({ product }) => {
 	);
 };
 
-export const ProductsTableWrapper: FC<{
+const ProductsTableWrapper: FC<{
 	pagination?: {
 		currentPage: number;
 		itemsPerPage: number;
@@ -85,19 +89,25 @@ export const ProductsTableWrapper: FC<{
 	);
 };
 
-export const ProductsTable = () => {
-	const [page, setPage] = useState(DEFAULT_PAGE);
+const ProductListTable = () => {
+	const { searchParams, setSearchParams } = useSearchParamsContext();
+
+	const defaultPage = useMemo(() => {
+		const page = searchParams.get("page");
+		return page ? parseInt(page) : DEFAULT_PAGE;
+	}, [searchParams]);
+
+	const [page, setPage] = useState(defaultPage);
 
 	const {
 		data: products,
 		status,
 		error,
+		isFetching,
 	} = useProducts({
 		page,
 		per_page: ITEMS_PER_PAGE,
 	});
-
-	const { searchParams, setSearchParams } = useSearchParams();
 
 	useEffect(() => {
 		const searchPage = searchParams.get("page");
@@ -136,9 +146,7 @@ export const ProductsTable = () => {
 		>
 			{status === "loading" ? (
 				<TableRow>
-					<TableCell align='center' colSpan={3}>
-						Loading...
-					</TableCell>
+					<LoadingTableCell />
 				</TableRow>
 			) : status === "error" ? (
 				<TableRow>
@@ -148,6 +156,7 @@ export const ProductsTable = () => {
 				</TableRow>
 			) : (
 				<>
+					{isFetching && <LoadingTableCell />}
 					{products.data.map((product) => (
 						<ProductTableCell product={product} key={product.id} />
 					))}
@@ -157,26 +166,28 @@ export const ProductsTable = () => {
 	);
 };
 
-export const FilteredProductTable: FC<{ productId: number }> = memo(
+const FilteredProductTable: FC<{ productId: number }> = memo(
 	({ productId }) => {
-		const { status, data: product, error } = useProduct(productId);
+		const { status, data: product, error, isFetching } = useProduct(productId);
 
 		return (
 			<ProductsTableWrapper>
 				{status === "loading" ? (
 					<TableRow>
-						<TableCell align='center' colSpan={3}>
-							Loading...
-						</TableCell>
+						<LoadingTableCell />
 					</TableRow>
 				) : status === "error" ? (
 					<TableRow>
 						<TableCell align='center' colSpan={3}>
-							{error.status === 404
-								? `Cannot find product with id ${productId}`
-								: error.message}
+							<Typography color='red'>
+								{error.status === 404
+									? `Cannot find product with id ${productId}`
+									: error.message}
+							</Typography>
 						</TableCell>
 					</TableRow>
+				) : isFetching ? (
+					<LoadingTableCell />
 				) : (
 					<ProductTableCell product={product.data} />
 				)}
@@ -184,3 +195,33 @@ export const FilteredProductTable: FC<{ productId: number }> = memo(
 		);
 	}
 );
+
+const LoadingTableCell = () => {
+	return (
+		<TableCell align='center' colSpan={3}>
+			<Box
+				display='flex'
+				alignItems='center'
+				columnGap='8px'
+				justifyContent='center'
+			>
+				<CircularProgress size='24px' />
+				Loading...
+			</Box>
+		</TableCell>
+	);
+};
+
+export const ProductTable = () => {
+	const { formData } = useProductSearchFormContext();
+
+	return (
+		<>
+			{formData.id === null ? (
+				<ProductListTable />
+			) : (
+				<FilteredProductTable productId={formData.id} />
+			)}
+		</>
+	);
+};

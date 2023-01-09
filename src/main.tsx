@@ -2,8 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode as ReactStrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
+import { SearchParamsProvider } from "./contexts/SearchParamsContext";
 import "./index.css";
-import { SearchParamsProvider } from "./hooks/useSearchParams";
 
 const queryClient = new QueryClient();
 
