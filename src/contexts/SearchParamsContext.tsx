@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import {
 	createContext,
 	Dispatch,
@@ -23,39 +24,44 @@ export const useSearchParamsContext = () => {
 	return data;
 };
 
+const setSearchParamsToURL = (searchParams: URLSearchParams) => {
+	let url = location.pathname;
+
+	const searchString = searchParams.toString();
+	if (searchString.length) url += "?" + searchString;
+
+	history.pushState(null, "", url);
+};
+
 export const SearchParamsProvider: FC<{ children: ReactNode }> = (props) => {
-	const [searchParams, setSearchParams] = useState(
+	const [searchParams, _setSearchParams] = useState(
 		new URLSearchParams(location.search)
+	);
+
+	const setSearchParams = useCallback<
+		Dispatch<SetStateAction<URLSearchParams>>
+	>(
+		(value) => {
+			if (typeof value === "function") {
+				_setSearchParams((prev) => {
+					const newSearchParams = value(prev);
+					setSearchParamsToURL(newSearchParams);
+
+					return newSearchParams;
+				});
+				return;
+			}
+
+			_setSearchParams(value);
+			setSearchParamsToURL(value);
+		},
+		[_setSearchParams]
 	);
 
 	return (
 		<SearchParamsContext.Provider
 			value={{
-				setSearchParams: (value) => {
-					if (typeof value === "function") {
-						setSearchParams((prev) => {
-							const newValue = value(prev);
-							let url = location.pathname;
-
-							const search = newValue.toString();
-							if (search.length) url += "?" + search;
-
-							history.pushState(null, "", url);
-
-							return newValue;
-						});
-						return;
-					}
-
-					setSearchParams(value);
-
-					let url = location.pathname;
-
-					const search = value.toString();
-					if (search.length) url += "?" + search;
-
-					history.pushState(null, "", url);
-				},
+				setSearchParams,
 				searchParams,
 			}}
 		>
