@@ -13,7 +13,7 @@ import {
 const getProducts = async (queryParams?: GetProductsQueryParams) => {
   const res = await fetch(
     `${API_BASE}/products${
-      queryParams === undefined ? "" : parseObjectToQueryString(queryParams)
+      queryParams ? parseObjectToQueryString(queryParams) : ""
     }`,
   );
 

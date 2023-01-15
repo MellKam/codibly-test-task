@@ -21,7 +21,7 @@ import { DEFAULT_PAGE, ITEMS_PER_PAGE } from "../constants";
 import { useSearchParamsContext } from "../contexts/SearchParamsContext";
 import { useProductSearchFormContext } from "../contexts/ProductSearchFormContext";
 
-const ProductTableCell: FC<{ product: Product }> = ({ product }) => {
+const ProductTableRow: FC<{ product: Product }> = ({ product }) => {
 	const [isModalOpen, setModalState] = useState(false);
 
 	return (
@@ -128,6 +128,17 @@ const ProductListTable = () => {
 		});
 	}, [page]);
 
+	if (products && products.total_pages < page) {
+		setSearchParams((prev) => {
+			prev.delete("page");
+			return prev;
+		});
+
+		setPage(DEFAULT_PAGE);
+
+		return null;
+	}
+
 	return (
 		<ProductsTableWrapper
 			pagination={
@@ -145,9 +156,7 @@ const ProductListTable = () => {
 			}
 		>
 			{status === "loading" ? (
-				<TableRow>
-					<LoadingTableCell />
-				</TableRow>
+				<LoadingTableRow />
 			) : status === "error" ? (
 				<TableRow>
 					<TableCell align='center' colSpan={3}>
@@ -156,10 +165,10 @@ const ProductListTable = () => {
 				</TableRow>
 			) : (
 				<>
-					{isFetching && <LoadingTableCell />}
 					{products.data.map((product) => (
-						<ProductTableCell product={product} key={product.id} />
+						<ProductTableRow product={product} key={product.id} />
 					))}
+					{isFetching && <LoadingTableRow />}
 				</>
 			)}
 		</ProductsTableWrapper>
@@ -173,9 +182,7 @@ const FilteredProductTable: FC<{ productId: number }> = memo(
 		return (
 			<ProductsTableWrapper>
 				{status === "loading" ? (
-					<TableRow>
-						<LoadingTableCell />
-					</TableRow>
+					<LoadingTableRow />
 				) : status === "error" ? (
 					<TableRow>
 						<TableCell align='center' colSpan={3}>
@@ -187,28 +194,30 @@ const FilteredProductTable: FC<{ productId: number }> = memo(
 						</TableCell>
 					</TableRow>
 				) : isFetching ? (
-					<LoadingTableCell />
+					<LoadingTableRow />
 				) : (
-					<ProductTableCell product={product.data} />
+					<ProductTableRow product={product.data} />
 				)}
 			</ProductsTableWrapper>
 		);
 	}
 );
 
-const LoadingTableCell = () => {
+const LoadingTableRow = () => {
 	return (
-		<TableCell align='center' colSpan={3}>
-			<Box
-				display='flex'
-				alignItems='center'
-				columnGap='8px'
-				justifyContent='center'
-			>
-				<CircularProgress size='24px' />
-				Loading...
-			</Box>
-		</TableCell>
+		<TableRow>
+			<TableCell align='center' colSpan={3}>
+				<Box
+					display='flex'
+					alignItems='center'
+					columnGap='8px'
+					justifyContent='center'
+				>
+					<CircularProgress size='24px' />
+					Loading...
+				</Box>
+			</TableCell>
+		</TableRow>
 	);
 };
 
