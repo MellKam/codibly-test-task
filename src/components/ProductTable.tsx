@@ -12,23 +12,43 @@ import {
 	CircularProgress,
 	Typography,
 } from "@mui/material";
-import { FC, ReactNode, useEffect, useState, memo, useMemo } from "react";
+import {
+	FC,
+	ReactNode,
+	memo,
+	useState,
+	useCallback,
+	ChangeEvent,
+	useMemo,
+} from "react";
 import { Product } from "../services/apiDataTypes";
 import { TablePaginationActions } from "./TablePaginationActions";
 import { ProductModal } from "./ProductModal";
 import { useProducts, useProduct } from "../services/product";
-import { DEFAULT_PAGE, ITEMS_PER_PAGE } from "../constants";
-import { useSearchParamsContext } from "../contexts/SearchParamsContext";
+import {
+	DEFAULT_PAGE,
+	DEFAULT_ITEMS_PER_PAGE,
+	ITEMS_PER_PAGE_OPTIONS,
+} from "../constants";
 import { useProductSearchFormContext } from "../contexts/ProductSearchFormContext";
+import { useIntSearchParam } from "../hooks/useIntSearchParam";
 
 const ProductTableRow: FC<{ product: Product }> = ({ product }) => {
 	const [isModalOpen, setModalState] = useState(false);
+
+	const handleModalClose = useCallback(() => {
+		setModalState(false);
+	}, [setModalState]);
+
+	const handleModalOpen = useCallback(() => {
+		setModalState(true);
+	}, [setModalState]);
 
 	return (
 		<>
 			<TableRow
 				sx={{ backgroundColor: product.color, cursor: "pointer" }}
-				onClick={() => setModalState(true)}
+				onClick={handleModalOpen}
 			>
 				<TableCell component='th' style={{ width: "8%" }} scope='row'>
 					{product.id}
@@ -41,19 +61,22 @@ const ProductTableRow: FC<{ product: Product }> = ({ product }) => {
 			<ProductModal
 				isOpen={isModalOpen}
 				product={product}
-				handleClose={() => setModalState(false)}
+				handleClose={handleModalClose}
 			/>
 		</>
 	);
 };
 
+interface TablePaginationProps {
+	currentPage: number;
+	itemsPerPage: number;
+	totalItems: number;
+	handlerPageChange: (nextPage: number) => void;
+	handleChangeRowsPerPage: (nextValue: number) => void;
+}
+
 const ProductsTableWrapper: FC<{
-	pagination?: {
-		currentPage: number;
-		itemsPerPage: number;
-		totalItems: number;
-		handlerPageChange: (nextPage: number) => void;
-	};
+	pagination?: TablePaginationProps;
 	children: ReactNode;
 }> = ({ children, pagination }) => {
 	return (
@@ -71,7 +94,7 @@ const ProductsTableWrapper: FC<{
 					<TableFooter>
 						<TableRow>
 							<TablePagination
-								rowsPerPageOptions={[]}
+								rowsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
 								colSpan={3}
 								count={pagination.totalItems}
 								rowsPerPage={pagination.itemsPerPage}
@@ -79,6 +102,9 @@ const ProductsTableWrapper: FC<{
 								onPageChange={(_, newPage) =>
 									pagination.handlerPageChange(newPage)
 								}
+								onRowsPerPageChange={(e) => {
+									pagination.handleChangeRowsPerPage(parseInt(e.target.value));
+								}}
 								ActionsComponent={TablePaginationActions}
 							/>
 						</TableRow>
@@ -90,14 +116,11 @@ const ProductsTableWrapper: FC<{
 };
 
 const ProductListTable = () => {
-	const { searchParams, setSearchParams } = useSearchParamsContext();
-
-	const defaultPage = useMemo(() => {
-		const page = searchParams.get("page");
-		return page ? parseInt(page) : DEFAULT_PAGE;
-	}, [searchParams]);
-
-	const [page, setPage] = useState(defaultPage);
+	const [page, setPage] = useIntSearchParam("page", DEFAULT_PAGE);
+	const [itemsPerPage, setItemsPerPage] = useIntSearchParam(
+		"items_per_page",
+		DEFAULT_ITEMS_PER_PAGE
+	);
 
 	const {
 		data: products,
@@ -106,55 +129,38 @@ const ProductListTable = () => {
 		isFetching,
 	} = useProducts({
 		page,
-		per_page: ITEMS_PER_PAGE,
+		per_page: itemsPerPage,
 	});
 
-	useEffect(() => {
-		const searchPage = searchParams.get("page");
-		if (searchPage) {
-			const numPage = parseInt(searchPage);
-			if (!isNaN(numPage) && page !== numPage) setPage(numPage);
-		}
-	}, [searchParams]);
-
-	useEffect(() => {
-		setSearchParams((prev) => {
-			if (prev.get("page") === null && page === DEFAULT_PAGE) {
-				return prev;
-			}
-
-			prev.set("page", page.toString());
-			return prev;
-		});
-	}, [page]);
-
 	if (products && products.total_pages < page) {
-		setSearchParams((prev) => {
-			prev.delete("page");
-			return prev;
-		});
-
 		setPage(DEFAULT_PAGE);
-
 		return null;
 	}
 
+	if (products && products.total < itemsPerPage) {
+		setItemsPerPage(DEFAULT_ITEMS_PER_PAGE);
+		return null;
+	}
+
+	const pagination = useMemo<TablePaginationProps | undefined>(() => {
+		if (status === "success") {
+			return {
+				// we need to decrement our page because in mui
+				// page starts with 0, but in our api it starts with 1
+				currentPage: page - 1,
+				handlerPageChange: (nextPage) => setPage(nextPage + 1),
+				itemsPerPage,
+				totalItems: products.total,
+				handleChangeRowsPerPage: (nextValue) => {
+					setItemsPerPage(nextValue);
+					setPage(DEFAULT_PAGE);
+				},
+			};
+		}
+	}, [page, itemsPerPage, status]);
+
 	return (
-		<ProductsTableWrapper
-			pagination={
-				status === "success"
-					? {
-							// we need to decrement our page because in mui
-							// page starts with 0, but in our api it starts with 1
-							currentPage: page - 1,
-							// and increment when set it
-							handlerPageChange: (nextPage) => setPage(nextPage + 1),
-							itemsPerPage: ITEMS_PER_PAGE,
-							totalItems: products.total,
-					  }
-					: undefined
-			}
-		>
+		<ProductsTableWrapper pagination={pagination}>
 			{status === "loading" ? (
 				<LoadingTableRow />
 			) : status === "error" ? (

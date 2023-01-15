@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { HttpError } from "../utils/HttpError";
-import { parseObjectToQueryString } from "../utils/parseObjectToQueryString";
+import { newURLFromParams } from "../utils/searchParamsFromObj";
 import {
   API_BASE,
   ApiItemResponse,
@@ -10,12 +10,9 @@ import {
   Product,
 } from "./apiDataTypes";
 
-const getProducts = async (queryParams?: GetProductsQueryParams) => {
-  const res = await fetch(
-    `${API_BASE}/products${
-      queryParams ? parseObjectToQueryString(queryParams) : ""
-    }`,
-  );
+const getProducts = async (searchParam?: GetProductsQueryParams) => {
+  const url = newURLFromParams(`${API_BASE}/products`, searchParam);
+  const res = await fetch(url);
 
   if (!res.ok) {
     throw new HttpError(await res.text(), res.status);
@@ -24,10 +21,9 @@ const getProducts = async (queryParams?: GetProductsQueryParams) => {
   return (await res.json()) as ApiPaginationResponse<Product>;
 };
 
-const getProductById = async (queryParams: GetProductQueryParams) => {
-  const res = await fetch(
-    `${API_BASE}/products${parseObjectToQueryString(queryParams)}`,
-  );
+const getProductById = async (searchParam: GetProductQueryParams) => {
+  const url = newURLFromParams(`${API_BASE}/products`, searchParam);
+  const res = await fetch(url);
 
   if (!res.ok) {
     throw new HttpError(await res.text(), res.status);
@@ -50,7 +46,7 @@ export const useProducts = (
   opts: Required<GetProductsQueryParams>,
 ) => {
   return useQuery<ApiPaginationResponse<Product>, HttpError>({
-    queryKey: ["products", opts.page],
+    queryKey: ["products", opts.page, opts.per_page],
     queryFn: () => getProducts(opts),
     keepPreviousData: true,
     staleTime: Infinity,

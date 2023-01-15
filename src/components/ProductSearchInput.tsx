@@ -1,31 +1,18 @@
 import { TextField } from "@mui/material";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import {
-	ProductSearchFormData,
-	useProductSearchFormContext,
-} from "../contexts/ProductSearchFormContext";
-import { useDebounce } from "../hooks/useDebounce";
+import { useProductSearchFormContext } from "../contexts/ProductSearchFormContext";
+import { useDebounceForm } from "../hooks/useDebounceForm";
 
 export const ProductSearchInput = () => {
 	const { defaultValues, setFormData } = useProductSearchFormContext();
 
-	const debounceHandler = useDebounce(setFormData, 200, [setFormData]);
-
 	const {
 		register,
-		handleSubmit,
-		watch,
 		formState: { errors },
-	} = useForm<ProductSearchFormData>({
+	} = useDebounceForm({
+		debounceDelay: 200,
 		defaultValues,
+		setFormData,
 	});
-
-	useEffect(() => {
-		const subscription = watch(handleSubmit(debounceHandler) as any);
-
-		return () => subscription.unsubscribe();
-	}, [handleSubmit, watch]);
 
 	return (
 		<TextField
