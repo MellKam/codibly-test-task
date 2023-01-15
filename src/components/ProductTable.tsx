@@ -18,7 +18,6 @@ import {
 	memo,
 	useState,
 	useCallback,
-	ChangeEvent,
 	useMemo,
 } from "react";
 import { Product } from "../services/apiDataTypes";
