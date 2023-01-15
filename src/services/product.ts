@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { HttpError } from "../utils/HttpError";
-import { newURLFromParams } from "../utils/searchParamsFromObj";
+import { newURLFromParams } from "../utils/newUrlFromParams";
 import {
   API_BASE,
   ApiItemResponse,
