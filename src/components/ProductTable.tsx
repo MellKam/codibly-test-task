@@ -131,11 +131,14 @@ const ProductListTable = () => {
 		per_page: itemsPerPage,
 	});
 
+	// If requested page number is out of bound, then 
+	// api does NOT throw and error, so we must to handle this
 	if (products && products.total_pages < page) {
 		setPage(DEFAULT_PAGE);
 		return null;
 	}
 
+	// If `per_page` larger then total items count
 	if (products && products.total < itemsPerPage) {
 		setItemsPerPage(DEFAULT_ITEMS_PER_PAGE);
 		return null;
@@ -147,6 +150,7 @@ const ProductListTable = () => {
 				// we need to decrement our page because in mui
 				// page starts with 0, but in our api it starts with 1
 				currentPage: page - 1,
+				// increment to normalize mui page number  
 				handlerPageChange: (nextPage) => setPage(nextPage + 1),
 				itemsPerPage,
 				totalItems: products.total,
@@ -191,7 +195,7 @@ const FilteredProductTable: FC<{ productId: number }> = memo(
 				) : status === "error" ? (
 					<TableRow>
 						<TableCell align='center' colSpan={3}>
-							<Typography color='red'>
+							<Typography>
 								{error.status === 404
 									? `Cannot find product with id ${productId}`
 									: error.message}

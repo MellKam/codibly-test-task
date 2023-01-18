@@ -8,7 +8,7 @@ export const App = () => {
 		<Box maxWidth='800px' display='flex' mx='auto' flexDirection='column'>
 			<ProductSearchFormProvider>
 				<ProductSearchInput />
-				<Box mt='8px'>
+				<Box mt='8px' component="main">
 					<ProductTable />
 				</Box>
 			</ProductSearchFormProvider>
