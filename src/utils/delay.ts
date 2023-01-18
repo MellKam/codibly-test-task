@@ -1,7 +1,10 @@
-export const delay = async <T>(handler: () => T, delay: number) => {
-  return new Promise<T>(async (resolve, _) => {
-    setTimeout(async () => {
-      resolve(await handler());
-    }, delay);
-  });
+export const delay = async <T>(
+	handler: () => Promise<T> | T,
+	delay: number,
+) => {
+	return await new Promise<T>((resolve, _reject) => {
+		setTimeout(async () => {
+			resolve(await handler());
+		}, delay);
+	});
 };

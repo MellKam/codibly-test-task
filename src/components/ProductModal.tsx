@@ -5,7 +5,10 @@ import { Product } from "../services/apiDataTypes";
 export const ProductModal: FC<{
 	product: Product;
 	isOpen: boolean;
-	handleClose: (event: {}, reason: "backdropClick" | "escapeKeyDown") => void;
+	handleClose: (
+		event: unknown,
+		reason: "backdropClick" | "escapeKeyDown",
+	) => void;
 }> = ({ product, handleClose, isOpen }) => {
 	return (
 		<Modal open={isOpen} onClose={handleClose}>
@@ -35,7 +38,7 @@ export const ProductModal: FC<{
 							borderRadius: "4px",
 						}}
 					></Box>
-					<Typography variant='h6' component='h2' fontWeight='bold' mt='8px'>
+					<Typography variant="h6" component="h2" fontWeight="bold" mt="8px">
 						#{product.id} {product.name}
 					</Typography>
 

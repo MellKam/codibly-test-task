@@ -12,14 +12,7 @@ import {
 	CircularProgress,
 	Typography,
 } from "@mui/material";
-import {
-	FC,
-	ReactNode,
-	memo,
-	useState,
-	useCallback,
-	useMemo,
-} from "react";
+import { FC, ReactNode, memo, useState, useCallback, useMemo } from "react";
 import { Product } from "../services/apiDataTypes";
 import { TablePaginationActions } from "./TablePaginationActions";
 import { ProductModal } from "./ProductModal";
@@ -49,7 +42,7 @@ const ProductTableRow: FC<{ product: Product }> = ({ product }) => {
 				sx={{ backgroundColor: product.color, cursor: "pointer" }}
 				onClick={handleModalOpen}
 			>
-				<TableCell component='th' style={{ width: "8%" }} scope='row'>
+				<TableCell component="th" style={{ width: "8%" }} scope="row">
 					{product.id}
 				</TableCell>
 				<TableCell style={{ width: 160, fontWeight: "bold" }}>
@@ -118,7 +111,7 @@ const ProductListTable = () => {
 	const [page, setPage] = useIntSearchParam("page", DEFAULT_PAGE);
 	const [itemsPerPage, setItemsPerPage] = useIntSearchParam(
 		"items_per_page",
-		DEFAULT_ITEMS_PER_PAGE
+		DEFAULT_ITEMS_PER_PAGE,
 	);
 
 	const {
@@ -131,7 +124,7 @@ const ProductListTable = () => {
 		per_page: itemsPerPage,
 	});
 
-	// If requested page number is out of bound, then 
+	// If requested page number is out of bound, then
 	// api does NOT throw and error, so we must to handle this
 	if (products && products.total_pages < page) {
 		setPage(DEFAULT_PAGE);
@@ -150,7 +143,7 @@ const ProductListTable = () => {
 				// we need to decrement our page because in mui
 				// page starts with 0, but in our api it starts with 1
 				currentPage: page - 1,
-				// increment to normalize mui page number  
+				// increment to normalize mui page number
 				handlerPageChange: (nextPage) => setPage(nextPage + 1),
 				itemsPerPage,
 				totalItems: products.total,
@@ -168,7 +161,7 @@ const ProductListTable = () => {
 				<LoadingTableRow />
 			) : status === "error" ? (
 				<TableRow>
-					<TableCell align='center' colSpan={3}>
+					<TableCell align="center" colSpan={3}>
 						Error: {(error as Error).message}
 					</TableCell>
 				</TableRow>
@@ -194,7 +187,7 @@ const FilteredProductTable: FC<{ productId: number }> = memo(
 					<LoadingTableRow />
 				) : status === "error" ? (
 					<TableRow>
-						<TableCell align='center' colSpan={3}>
+						<TableCell align="center" colSpan={3}>
 							<Typography>
 								{error.status === 404
 									? `Cannot find product with id ${productId}`
@@ -209,20 +202,20 @@ const FilteredProductTable: FC<{ productId: number }> = memo(
 				)}
 			</ProductsTableWrapper>
 		);
-	}
+	},
 );
 
 const LoadingTableRow = () => {
 	return (
 		<TableRow>
-			<TableCell align='center' colSpan={3}>
+			<TableCell align="center" colSpan={3}>
 				<Box
-					display='flex'
-					alignItems='center'
-					columnGap='8px'
-					justifyContent='center'
+					display="flex"
+					alignItems="center"
+					columnGap="8px"
+					justifyContent="center"
 				>
-					<CircularProgress size='24px' />
+					<CircularProgress size="24px" />
 					Loading...
 				</Box>
 			</TableCell>

@@ -1,5 +1,5 @@
-import { useCallback } from "react";
 import {
+	useCallback,
 	createContext,
 	Dispatch,
 	FC,
@@ -28,14 +28,14 @@ const setSearchParamsToURL = (searchParams: URLSearchParams) => {
 	let url = location.pathname;
 
 	const searchString = searchParams.toString();
-	if (searchString.length) url += "?" + searchString;
+	if (searchString.length !== 0) url += "?" + searchString;
 
 	history.pushState(null, "", url);
 };
 
 export const SearchParamsProvider: FC<{ children: ReactNode }> = (props) => {
 	const [searchParams, _setSearchParams] = useState(
-		new URLSearchParams(location.search)
+		new URLSearchParams(location.search),
 	);
 
 	const setSearchParams = useCallback<
@@ -55,7 +55,7 @@ export const SearchParamsProvider: FC<{ children: ReactNode }> = (props) => {
 			_setSearchParams(value);
 			setSearchParamsToURL(value);
 		},
-		[_setSearchParams]
+		[_setSearchParams],
 	);
 
 	return (

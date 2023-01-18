@@ -8,7 +8,7 @@ interface TablePaginationActionsProps {
 	rowsPerPage: number;
 	onPageChange: (
 		event: React.MouseEvent<HTMLButtonElement>,
-		newPage: number
+		newPage: number,
 	) => void;
 }
 
@@ -23,14 +23,14 @@ export function TablePaginationActions({
 			<IconButton
 				onClick={(event) => onPageChange(event, page - 1)}
 				disabled={page === 0}
-				aria-label='previous page'
+				aria-label="previous page"
 			>
 				<KeyboardArrowLeft />
 			</IconButton>
 			<IconButton
 				onClick={(event) => onPageChange(event, page + 1)}
 				disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-				aria-label='next page'
+				aria-label="next page"
 			>
 				<KeyboardArrowRight />
 			</IconButton>

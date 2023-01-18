@@ -28,7 +28,7 @@ export const ProductSearchFormProvider: FC<{ children: ReactNode }> = ({
 
 	const defaultValues = useMemo((): ProductSearchFormData => {
 		const id = searchParams.get("id");
-		return { id: id ? parseInt(id) : null };
+		return { id: id !== null ? parseInt(id) : null };
 	}, [searchParams]);
 
 	const [formData, setFormData] =
@@ -37,7 +37,7 @@ export const ProductSearchFormProvider: FC<{ children: ReactNode }> = ({
 	useEffect(() => {
 		const id = searchParams.get("id");
 
-		if (id) {
+		if (id !== null) {
 			const numberId = parseInt(id);
 			if (isNaN(numberId)) {
 				setSearchParams((prev) => {
@@ -55,15 +55,19 @@ export const ProductSearchFormProvider: FC<{ children: ReactNode }> = ({
 	}, [searchParams]);
 
 	useEffect(() => {
-		formData.id === null
-			? setSearchParams((prev) => {
-					prev.delete("id");
-					return prev;
-			  })
-			: setSearchParams((prev) => {
-					prev.set("id", formData.id!.toString());
-					return prev;
-			  });
+		if (formData.id === null) {
+			setSearchParams((prev) => {
+				prev.delete("id");
+				return prev;
+			});
+			return;
+		}
+
+		setSearchParams((prev) => {
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			prev.set("id", formData.id!.toString());
+			return prev;
+		});
 	}, [formData]);
 
 	return (
